@@ -1,4 +1,3 @@
-import io
 import xml.etree.ElementTree as ET
 
 import pandas as pd
@@ -48,8 +47,6 @@ def filter_estimated_project(df: pd.DataFrame):
 def main():
     st.title("Xsped Expenses Reader")
 
-    buffer = io.BytesIO
-
     # File upload widgets for persons data and XML file
     persons_file = st.file_uploader("Upload Persons Data (Excel)", type=["xlsx"])
     xml_file = st.file_uploader("Upload XML File", type=["xml"])
@@ -82,17 +79,6 @@ def main():
                 filtered_est = filter_estimated_project(merge_est)
 
                 st.dataframe(filtered_est, width=700, height=700, hide_index=True)
-
-                with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                    # Write each dataframe to a different worksheet.
-                    filtered_est.to_excel(writer, sheet_name=f'Sheet 1')
-                    writer.close()
-                    st.download_button(
-                        label="Download Excel worksheets",
-                        data=buffer,
-                        file_name="not_estimated.xlsx",
-                        mime="application/vnd.ms-excel"
-                    )
 
 
 if __name__ == "__main__":
