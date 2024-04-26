@@ -37,28 +37,29 @@ def main():
     persons_file = st.file_uploader("Upload Persons Data (Excel)", type=["xlsx"])
     xml_file = st.file_uploader("Upload XML File", type=["xml"])
     currency = st.selectbox('Select Currency', ("SEK", "EUR", "NOK", "DKK"))
+
     if st.button("Process Files"):
-        if persons_file and xml_file:
-            # Read persons data from Excel file
+        with st.status("Processing Files", expanded=True):
+            if persons_file and xml_file:
+                # Read persons data from Excel file
 
-            # Create a dictionary from persons data
-            persons_data = process_excel_file(persons_file)
+                persons_data = process_excel_file(persons_file)
 
-            data = process_xml(xml_file)
+                data = process_xml(xml_file)
 
-            df = pd.DataFrame(data)
+                df = pd.DataFrame(data)
 
-            merged_df = pd.merge(df, persons_data, on='ID', how='inner')
+                merged_df = pd.merge(df, persons_data, on='ID', how='inner')
 
-            merged_df['LineSum'] = merged_df['LineSum'].astype(float)
+                merged_df['LineSum'] = merged_df['LineSum'].astype(float)
 
-            grouped = merged_df.groupby(['First Name', 'ProjectID']).sum().reset_index()
+                grouped = merged_df.groupby(['First Name', 'ProjectID']).sum().reset_index()
 
-            df_sorted = grouped.sort_values('First Name')
+                df_sorted = grouped.sort_values('First Name')
 
-            df_sorted['LineSum'] = df_sorted['LineSum'].map(lambda x: f'{x:.2f} {currency}')
+                df_sorted['LineSum'] = df_sorted['LineSum'].map(lambda x: f'{x:.2f} {currency}')
 
-            st.dataframe(df_sorted.loc[:, df_sorted.columns != 'ID'], width=700, hide_index=True)  #
+                st.dataframe(df_sorted.loc[:, df_sorted.columns != 'ID'], width=700, height=700, hide_index=True)  #
 
 
 if __name__ == "__main__":
