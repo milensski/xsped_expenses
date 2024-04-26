@@ -48,7 +48,7 @@ def filter_estimated_project(df: pd.DataFrame):
 def main():
     st.title("Xsped Expenses Reader")
 
-    buffer = io.BytesIO()
+    buffer = io.BytesIO
 
     # File upload widgets for persons data and XML file
     persons_file = st.file_uploader("Upload Persons Data (Excel)", type=["xlsx"])
@@ -86,7 +86,7 @@ def main():
                 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                     # Write each dataframe to a different worksheet.
                     filtered_est.to_excel(writer, sheet_name=f'Sheet 1')
-
+                    writer.close()
                     st.download_button(
                         label="Download Excel worksheets",
                         data=buffer,
