@@ -78,7 +78,9 @@ def main():
 
                 filtered_est = filter_estimated_project(merge_est)
 
-                st.dataframe(filtered_est, width=700, height=700, hide_index=True)
+                # st.dataframe(filtered_est, width=700, height=700, hide_index=True)
+
+                st.markdown(filtered_est.to_markdown(index=False))
 
 
 if __name__ == "__main__":
