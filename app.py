@@ -8,7 +8,7 @@ def process_xml(xml_file):
     tree = ET.parse(xml_file)
     root = tree.getroot()
 
-    data = {'ID': [], 'LineSum': [], 'ProjectID': []}
+    data = {'ID': [], 'LineSum': [], 'Project ID': []}
 
     for line in root.iter():
         line_name = line.tag.split('}')[1]
@@ -18,16 +18,30 @@ def process_xml(xml_file):
         elif line_name == 'LineSum':
             data['LineSum'].append(line_text)
         elif line_name == 'ProjectID':
-            data['ProjectID'].append(line_text)
+            data['Project ID'].append(int(line_text))
 
     return data
 
 
-def process_excel_file(persons_file):
-    persons_data = pd.read_excel(persons_file, sheet_name='Sheet')
-    persons_data['ID'] = persons_data['ID'].map(lambda x: int(x))
+def process_excel_file(excel_file):
+    excel_data = pd.read_excel(excel_file, sheet_name='Sheet')
 
-    return persons_data
+    if 'ID' in excel_data.columns:
+        excel_data['ID'] = excel_data['ID'].map(lambda x: int(x))
+
+    elif 'Project ID' in excel_data.columns:
+        excel_data['Project ID'] = excel_data['Project ID'].map(lambda x: int(x))
+        return excel_data[['Project ID', 'Difference']]
+
+    return excel_data
+
+
+def filter_estimated_project(df: pd.DataFrame):
+    df['Project ID'] = df['Project ID'].astype(str)
+    filtered_df = df[df['Difference'] > 200].copy()
+    filtered_df['Difference'] = filtered_df['Difference'].map(lambda x: f'{x:.2f} SEK')
+
+    return filtered_df.loc[:, filtered_df.columns != 'ID']
 
 
 def main():
@@ -36,6 +50,7 @@ def main():
     # File upload widgets for persons data and XML file
     persons_file = st.file_uploader("Upload Persons Data (Excel)", type=["xlsx"])
     xml_file = st.file_uploader("Upload XML File", type=["xml"])
+    estimations_file = st.file_uploader("Upload Estimations File", type=["xlsx"])
     currency = st.selectbox('Select Currency', ("SEK", "EUR", "NOK", "DKK"))
 
     if st.button("Process Files"):
@@ -44,8 +59,8 @@ def main():
                 # Read persons data from Excel file
 
                 persons_data = process_excel_file(persons_file)
-
                 data = process_xml(xml_file)
+                estimations = process_excel_file(estimations_file)
 
                 df = pd.DataFrame(data)
 
@@ -53,13 +68,17 @@ def main():
 
                 merged_df['LineSum'] = merged_df['LineSum'].astype(float)
 
-                grouped = merged_df.groupby(['First Name', 'ProjectID']).sum().reset_index()
+                grouped = merged_df.groupby(['First Name', 'Project ID']).sum().reset_index()
 
                 df_sorted = grouped.sort_values('First Name')
 
                 df_sorted['LineSum'] = df_sorted['LineSum'].map(lambda x: f'{x:.2f} {currency}')
 
-                st.dataframe(df_sorted.loc[:, df_sorted.columns != 'ID'], width=700, height=700, hide_index=True)  #
+                merge_est = pd.merge(df_sorted, estimations, on='Project ID', how='inner')
+
+                filtered_est = filter_estimated_project(merge_est)
+
+                st.dataframe(filtered_est, width=700, height=700, hide_index=True)
 
 
 if __name__ == "__main__":
